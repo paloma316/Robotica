@@ -1,0 +1,183 @@
+programa
+import com.ridgesoft.intellibrain.IntelliBrain;
+
+import com.ridgesoft.io.Display;
+
+import com.ridgesoft.robotics.ContinuousRotationServo;
+
+import com.ridgesoft.robotics.Motor;
+
+import com.ridgesoft.robotics.SonarRangeFinder;
+
+import com.ridgesoft.robotics.sensors.ParallaxPing;
+
+
+
+public class FollowWall3 {
+
+
+
+private static Display display;
+
+private static Motor leftMotor;
+
+private static Motor rightMotor;
+
+private static SonarRangeFinder rightSonar;
+
+
+
+private static final int R_Dist_Wall = 15;
+
+private static final int BASE_POWER = 8;
+
+private static final float GAIN = 0.9f;
+
+private static float rightDist;
+
+
+
+public static void main(String[] args) {
+
+
+
+display = IntelliBrain.getLcdDisplay();
+
+display.print(0, "Follow Wall");
+
+
+
+leftMotor = new ContinuousRotationServo(IntelliBrain.getServo(1), false, 14);
+
+rightMotor = new ContinuousRotationServo(IntelliBrain.getServo(2), true, 14);
+
+
+
+rightSonar = new ParallaxPing(IntelliBrain.getDigitalIO(5));
+
+
+
+while (true) {
+
+rightSonar.ping();
+
+delay(50);
+
+rightDist = rightSonar.getDistanceCm();
+
+
+
+displayDist();
+
+//FollowRightWallV1();
+
+FollowRightWallV2();
+
+
+
+delay(50); 
+
+}
+
+}
+
+
+
+private static void displayDist() {
+
+if (rightDist > 0.0f)
+
+display.print(1, "R: " + (int) (rightDist + 0.5));
+
+else
+
+display.print(1, "R: --");
+
+}
+
+
+
+private static void delay(int ms) {
+
+try {
+
+Thread.sleep(ms);
+
+} catch (InterruptedException e) {
+
+e.printStackTrace();
+
+}
+
+}
+
+
+
+private static void FollowRightWallV1() {
+
+if(rightDist < 0.0)
+
+ rightDist = 100.0f;
+
+if(rightDist == R_Dist_Wall)
+
+// Mover em frente.
+
+move(BASE_POWER, 0);
+
+else if	(rightDist > R_Dist_Wall)
+
+// Mover em arco para a direita.
+
+move(BASE_POWER, 5);
+
+else
+
+// Mover em arco para a esquerda.
+
+move(BASE_POWER, -2);
+
+}
+
+private static void FollowRightWallV2() {
+
+if(rightDist < 0.0)
+
+ rightDist = 100.0f;
+
+float error = rightDist - R_Dist_Wall;
+
+int delta = (int)(error * GAIN);
+
+if(delta > 5)
+
+delta = 5;
+
+else if(delta < -5)
+
+delta = -5;
+
+move(BASE_POWER, delta);
+
+}
+
+private static void move(int power, int delta) {
+
+// Função para mover o robô.
+
+// Se power > 0, o robô avança.
+
+// Se power < 0, o robô recua.
+
+        // Se delta > 0, o robô curva para a direita.
+
+// Se delta > 0, o robô curva para a esquerda.
+
+leftMotor.setPower(power + delta);
+
+rightMotor.setPower(power - delta);
+
+}
+
+}
+
